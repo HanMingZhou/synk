@@ -10,24 +10,33 @@ import (
 func main() {
 
 	// 启动gin服务
-	go func() {
-		server.Run()
-	}()
+	go server.Run()
 
 	// 启动chrome浏览器
-	chromePath := "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-	// 执行chrome 127.0.0.1:27149
-	cmd := exec.Command(chromePath, "--app=http://127.0.0.1:27149/static/index.html")
-	cmd.Start()
+	cmd := startBrowser()
 
 	// 监听中断信号
-	chSignal := make(chan os.Signal, 1)
-	signal.Notify(chSignal, os.Interrupt)
-
+	chSignal := ListneTosignalHandler()
+	
 	// 等待中断信号
 	select {
 	case <-chSignal: // 阻塞等待信号
 		cmd.Process.Kill()
 	}
 
+}
+
+func startBrowser() *exec.Cmd {
+	// 先写死路径，后面在照着 lorca改
+	chromePath := "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+	// 执行chrome 127.0.0.1:27149
+	cmd := exec.Command(chromePath, "--app=http://127.0.0.1:27149/static/index.html")
+	cmd.Start()
+	return cmd
+}
+
+func ListneTosignalHandler() chan os.Signal {
+	chSignal := make(chan os.Signal, 1)
+	signal.Notify(chSignal, os.Interrupt)
+	return chSignal
 }
