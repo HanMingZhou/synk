@@ -3,6 +3,7 @@ package server
 import (
 	"embed"
 	c "filesend/server/controller"
+	"filesend/server/ws"
 	"io/fs"
 	"log"
 	"net/http"
@@ -15,12 +16,16 @@ import (
 var FS embed.FS
 
 func Run() {
+	hub := ws.NewHub()
+	go hub.Run()
 
 	gin.SetMode(gin.DebugMode)
 	r := gin.Default()
-
 	staticFiles, _ := fs.Sub(FS, "frontend/dist")
 	r.StaticFS("/static", http.FS(staticFiles))
+	r.GET("/ws", func(c *gin.Context) {
+		ws.HttpController(c, hub)
+	})
 	r.POST("/api/v1/files", c.FilesController)
 	r.GET("/api/v1/qrcodes", c.QrcodesController)
 	r.GET("/uploads/:path", c.UploadController)
